@@ -51,9 +51,19 @@ class RockView(ViewSet):
         except Exception as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     def list(self, request):
+
+        # Get query string parameter
+        owner_only = self.request.query_params.get("owner_only", None)
+
         try:
             # Retrieves all rock row objects
             rocks = Rock.objects.all()
+
+            # If ?owner_only is in the URL
+            if owner_only is not None and owner_only == "current":
+                # Filter the rocks list with user id's matching current user's
+                rocks = rocks.filter(user=request.auth.user)
+
             # Passes the list of rock row objects to serialize
             serializer = RockSerializer(rocks, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
